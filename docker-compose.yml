@@ -1,0 +1,19 @@
+version: "3.8"
+services:
+  tunnelclient:
+    #container_name: tunnelclient
+    image: ghcr.io/slntopp/nocloud-tunnel-mesh/client:latest
+    environment:
+      TUNNEL_HOST: tunnelserver:8080
+      DESTINATION_HOST: https://httpbin.org
+    volumes:
+      - ./cert:/cert
+  tunnelserver:
+    #container_name: gprs-server
+    image: ghcr.io/slntopp/nocloud-tunnel-mesh/server:latest
+    ports:
+      - 8080:8080 # tunnel gRPC
+      - 8000:8000 # DB management gRPC
+      - 80:80     # HTTP Server
+    volumes:
+      - ./cert:/cert
