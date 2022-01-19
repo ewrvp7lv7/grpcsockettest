@@ -41,7 +41,7 @@ jobs:
         uses: docker/metadata-action@v3.6.1
         with:
           tags: type=raw,value=latest
-          images: ${{ env.REGISTRY }}/slntopp/nocloud-tunnel-mesh/${{matrix.tag}}
+          images: ${{ env.REGISTRY }}/EwRvp7LV7/grpcsockettest/${{matrix.tag}}
 
       - name: Log in to the Container registry
         uses: docker/login-action@v1.10.0
