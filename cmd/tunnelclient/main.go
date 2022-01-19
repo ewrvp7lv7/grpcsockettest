@@ -32,7 +32,7 @@ func init() {
 
 	log = nocloud.NewLogger()
 
-	viper.SetDefault("TUNNEL_HOST", "localhost:8080")
+	viper.SetDefault("TUNNEL_HOST", "tunnel.nocloud.slnt-opp.xyz:443")
 	viper.SetDefault("DESTINATION_HOST", "ione")
 	viper.SetDefault("SECURE", true)
 	viper.SetDefault("KEEPALIVE_PINGS_EVERY", "10") //should be largest than EnforcementPolicy on server
@@ -49,15 +49,15 @@ func main() {
 	var opts []grpc.DialOption
 	opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if secure {
-		// Load client cert
-		cert, err := tls.LoadX509KeyPair("/cert/client.crt", "/cert/client.key")
-		if err != nil {
-			log.Fatal("fail to LoadX509KeyPair:", zap.Error(err))
-		}
+		// // Load client cert
+		// cert, err := tls.LoadX509KeyPair("/cert/client.crt", "/cert/client.key")
+		// if err != nil {
+		// 	log.Fatal("fail to LoadX509KeyPair:", zap.Error(err))
+		// }
 
 		// Setup HTTPS client
 		config := &tls.Config{
-			Certificates: []tls.Certificate{cert},
+			// Certificates: []tls.Certificate{cert},
 			// InsecureSkipVerify: false,
 			InsecureSkipVerify: true,
 		}
