@@ -11,7 +11,6 @@ import (
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/keepalive"
 )
 
@@ -105,8 +104,6 @@ func main() {
 	server := tserver.NewTunnelServer(log, db)
 	server.LoadHostFingerprintsFromDB()
 	pb.RegisterSocketConnectionServer(grpcServer, server)
-
-	opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
 
 	// srv := server.StartHttpServer()
 	// defer srv.Shutdown(context.TODO())
