@@ -1,7 +1,6 @@
 package main
 
 import (
-	"crypto/tls"
 	"net"
 	"time"
 
@@ -12,7 +11,7 @@ import (
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/keepalive"
 )
 
@@ -66,22 +65,22 @@ func main() {
 
 	var opts []grpc.ServerOption
 
-	//openssl req -new -newkey rsa:4096 -x509 -sha256 -days 30 -nodes -out server.crt -keyout server.key
-	cert, err := tls.LoadX509KeyPair("/cert/tls.crt", "/cert/tls.key")
-	if err != nil {
-		log.Fatal("server: loadkeys:", zap.Error(err))
-	}
+	// //openssl req -new -newkey rsa:4096 -x509 -sha256 -days 30 -nodes -out server.crt -keyout server.key
+	// cert, err := tls.LoadX509KeyPair("/cert/tls.crt", "/cert/tls.key")
+	// if err != nil {
+	// 	log.Fatal("server: loadkeys:", zap.Error(err))
+	// }
 
-	// Note if we don't tls.RequireAnyClientCert client side certs are ignored.
-	config := &tls.Config{
-		Certificates: []tls.Certificate{cert},
-		// ClientCAs:    caCertPool,//It work! Peer client sertificates autenification
-		ClientAuth: tls.RequireAnyClientCert,
-		// VerifyPeerCertificate: is called only after normal certificate verification https://pkg.go.dev/crypto/tls#Config
-		// InsecureSkipVerify: false,
-		InsecureSkipVerify: true,
-	}
-	cred := credentials.NewTLS(config)
+	// // Note if we don't tls.RequireAnyClientCert client side certs are ignored.
+	// config := &tls.Config{
+	// 	Certificates: []tls.Certificate{cert},
+	// 	// ClientCAs:    caCertPool,//It work! Peer client sertificates autenification
+	// 	// ClientAuth: tls.RequireAnyClientCert,
+	// 	// VerifyPeerCertificate: is called only after normal certificate verification https://pkg.go.dev/crypto/tls#Config
+	// 	// InsecureSkipVerify: false,
+	// 	InsecureSkipVerify: true,
+	// }
+	// cred := credentials.NewTLS(config)
 
 	var kaep = keepalive.EnforcementPolicy{
 		MinTime:             time.Duration(keepalive_ping) * time.Second, // If a client pings more than once every 5 seconds, terminate the connection
@@ -100,12 +99,14 @@ func main() {
 
 	opts = append(opts, grpc.KeepaliveParams(kasp))
 
-	opts = append(opts, grpc.Creds(cred))
+	// opts = append(opts, grpc.Creds(cred))
 
 	grpcServer := grpc.NewServer(opts...)
 	server := tserver.NewTunnelServer(log, db)
 	server.LoadHostFingerprintsFromDB()
 	pb.RegisterSocketConnectionServer(grpcServer, server)
+
+	opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
 
 	// srv := server.StartHttpServer()
 	// defer srv.Shutdown(context.TODO())
@@ -113,7 +114,7 @@ func main() {
 	// dbsrv := server.StartDBgRPCServer()
 	// defer dbsrv.Stop()
 
-	log.Info("Hello! gRPC-Server Listening on 0.0.0.0:", zap.String("port", port), zap.Skip())
+	log.Info("Hello2! gRPC-Server Listening on 0.0.0.0:", zap.String("port", port), zap.Skip())
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatal("failed to serve grpc:", zap.Error(err))
 	}
