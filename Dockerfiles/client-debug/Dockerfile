@@ -10,10 +10,10 @@ COPY . .
 RUN CGO_ENABLED=0 go build -ldflags="-s -w" ./cmd/tunnelclient
 RUN upx ./tunnelclient
 
-# FROM alpine:3.13
+FROM alpine:3.13
 WORKDIR /
 COPY --from=builder  /go/src/github.com/slntopp/nocloud-tunnel-mesh/tunnelclient /tunnelclient
-
+# COPY /go/src/github.com/slntopp/nocloud-tunnel-mesh/tunnelclient /tunnelclient
 
 RUN     apk update \
     &&  apk add bash bind-tools busybox-extras curl \
@@ -21,10 +21,10 @@ RUN     apk update \
                 net-tools openssl \
                 perl-net-telnet procps tcpdump tcptraceroute 
 
-#COPY cert cert
+
 COPY hack/client_debug.sh /start
 
-LABEL org.opencontainers.image.source https://github.com/ewrvp7lv7/grpcsockettest
+EXPOSE 8000
+LABEL org.opencontainers.image.source https://github.com/slntopp/nocloud-tunnel-mesh
 
-# ENTRYPOINT ["/tunnelclient"]
 ENTRYPOINT ["/start"]
