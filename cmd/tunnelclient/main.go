@@ -31,7 +31,8 @@ func init() {
 
 	log = nocloud.NewLogger()
 
-	viper.SetDefault("TUNNEL_HOST", "localhost:8080")
+	viper.SetDefault("TUNNEL_HOST", "tunnel.nocloud.slnt-opp.xyz:443")
+	// viper.SetDefault("TUNNEL_HOST", "localhost:8080")
 	viper.SetDefault("DESTINATION_HOST", "ione")
 	viper.SetDefault("SECURE", true)
 	viper.SetDefault("KEEPALIVE_PINGS_EVERY", "10") //should be largest than EnforcementPolicy on server
