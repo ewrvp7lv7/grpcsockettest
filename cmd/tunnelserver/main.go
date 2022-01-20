@@ -118,7 +118,7 @@ func main() {
 	// dbsrv := server.StartDBgRPCServer()
 	// defer dbsrv.Stop()
 
-	log.Info("Hello grpc 443 dc! gRPC-Server Listening on 0.0.0.0:", zap.String("port", port), zap.Skip())
+	log.Info("Hello grpc 443 dc ny! gRPC-Server Listening on 0.0.0.0:", zap.String("port", port), zap.Skip())
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatal("failed to serve grpc:", zap.Error(err))
 	}

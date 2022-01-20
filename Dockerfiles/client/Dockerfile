@@ -14,6 +14,12 @@ FROM golang:1.17-alpine
 WORKDIR /
 COPY --from=builder  /go/src/github.com/slntopp/nocloud-tunnel-mesh/tunnelclient /tunnelclient
 
+RUN     apk update \
+    &&  apk add bash bind-tools busybox-extras curl \
+                iproute2 iputils jq mtr \
+                net-tools dnsutils openssl \
+                perl-net-telnet procps tcpdump tcptraceroute
+
 #COPY cert cert
 
 LABEL org.opencontainers.image.source https://github.com/slntopp/nocloud-tunnel-mesh
