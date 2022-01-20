@@ -10,7 +10,7 @@ COPY . .
 RUN CGO_ENABLED=0 go build -ldflags="-s -w" ./cmd/tunnelclient
 RUN upx ./tunnelclient
 
-# FROM alpine:3.13
+FROM alpine:3.13
 WORKDIR /
 COPY --from=builder  /go/src/github.com/slntopp/nocloud-tunnel-mesh/tunnelclient /tunnelclient
 
