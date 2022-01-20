@@ -50,15 +50,15 @@ func main() {
 	opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
 
 	if secure {
-		// Load client cert
-		cert, err := tls.LoadX509KeyPair("/cert/client.crt", "/cert/client.key")
-		if err != nil {
-			log.Fatal("fail to LoadX509KeyPair:", zap.Error(err))
-		}
+		// // Load client cert
+		// cert, err := tls.LoadX509KeyPair("/cert/client.crt", "/cert/client.key")
+		// if err != nil {
+		// 	log.Fatal("fail to LoadX509KeyPair:", zap.Error(err))
+		// }
 
 		// Setup HTTPS client
 		config := &tls.Config{
-			Certificates: []tls.Certificate{cert},
+			// Certificates: []tls.Certificate{cert},
 			// InsecureSkipVerify: false,
 			InsecureSkipVerify: true,
 		}
