@@ -94,8 +94,8 @@ func main() {
 
 			if err != nil {
 				log.Error("fail to dial:", zap.Error(err))
-				panic(1)
-				//return
+				// panic(1)
+				return
 			}
 			defer conn.Close()
 

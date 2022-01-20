@@ -65,6 +65,9 @@ func main() {
 
 	var opts []grpc.ServerOption
 
+
+
+
 	//openssl req -new -newkey rsa:4096 -x509 -sha256 -days 30 -nodes -out server.crt -keyout server.key
 	cert, err := tls.LoadX509KeyPair("/cert/tls.crt", "/cert/tls.key")
 	if err != nil {
@@ -83,6 +86,9 @@ func main() {
 	cred := credentials.NewTLS(config)
 
 	opts = append(opts, grpc.Creds(cred))
+
+
+
 
 	var kaep = keepalive.EnforcementPolicy{
 		MinTime:             time.Duration(keepalive_ping) * time.Second, // If a client pings more than once every 5 seconds, terminate the connection
@@ -112,7 +118,7 @@ func main() {
 	// dbsrv := server.StartDBgRPCServer()
 	// defer dbsrv.Stop()
 
-	log.Info("Hello grpc 443! gRPC-Server Listening on 0.0.0.0:", zap.String("port", port), zap.Skip())
+	log.Info("Hello grpc 443 dc! gRPC-Server Listening on 0.0.0.0:", zap.String("port", port), zap.Skip())
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatal("failed to serve grpc:", zap.Error(err))
 	}
