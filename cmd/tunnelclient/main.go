@@ -7,7 +7,6 @@ import (
 	"time"
 
 	pb "github.com/slntopp/nocloud-tunnel-mesh/pkg/proto"
-	"github.com/slntopp/nocloud-tunnel-mesh/pkg/tclient"
 	"github.com/slntopp/nocloud/pkg/nocloud"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
@@ -32,7 +31,7 @@ func init() {
 
 	log = nocloud.NewLogger()
 
-	viper.SetDefault("TUNNEL_HOST", "tunnel.nocloud.slnt-opp.xyz:443")
+	viper.SetDefault("TUNNEL_HOST", "localhost:8080")
 	viper.SetDefault("DESTINATION_HOST", "ione")
 	viper.SetDefault("SECURE", true)
 	viper.SetDefault("KEEPALIVE_PINGS_EVERY", "10") //should be largest than EnforcementPolicy on server
@@ -48,8 +47,9 @@ func init() {
 func main() {
 	var opts []grpc.DialOption
 	opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
+
 	if secure {
-		// // Load client cert
+		// Load client cert
 		// cert, err := tls.LoadX509KeyPair("/cert/client.crt", "/cert/client.key")
 		// if err != nil {
 		// 	log.Fatal("fail to LoadX509KeyPair:", zap.Error(err))
@@ -71,10 +71,11 @@ func main() {
 	var kacp = keepalive.ClientParameters{
 		Time:                time.Duration(keepalive_ping) * time.Second,    // send pings every keepalive_ping seconds if there is no activity
 		Timeout:             time.Duration(keepalive_timeout) * time.Second, // wait timeout second for ping back
-		PermitWithoutStream: true,                                          // send pings even without active streams
+		PermitWithoutStream: true,                                           // send pings even without active streams
 	}
 
 	opts = append(opts, grpc.WithKeepaliveParams(kacp))
+
 	opts = append(opts, grpc.WithBlock())
 
 	//Reconnection
@@ -118,11 +119,12 @@ func main() {
 					break
 				}
 
-				log.Debug("Received request from server:", zap.String("Message", in.Message), zap.Skip())
+				// log.Debug("Received request from server:", zap.String("Message", in.Message), zap.Skip())
 
-				//TODO send errors from httpClient
-				go tclient.HttpClient(log, dest, stream, in.Message, in.Id, in.Json)
+				log.Info("Received request from server:", zap.String("Message", in.Message), zap.Skip())
 
+				// //TODO send errors from httpClient
+				// go tclient.HttpClient(log, dest, stream, in.Message, in.Id, in.Json)
 
 			}
 		}()

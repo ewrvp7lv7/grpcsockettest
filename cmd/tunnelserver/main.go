@@ -1,16 +1,17 @@
 package main
 
 import (
+	"crypto/tls"
 	"net"
 	"time"
 
 	pb "github.com/slntopp/nocloud-tunnel-mesh/pkg/proto"
 	"github.com/slntopp/nocloud-tunnel-mesh/pkg/tserver"
 	"github.com/slntopp/nocloud/pkg/nocloud"
-	"github.com/slntopp/nocloud/pkg/nocloud/connectdb"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/keepalive"
 )
 
@@ -49,13 +50,13 @@ func main() {
 	}()
 	log.Info("Starting Tunnel Server service")
 
-	log.Info("Setting up DB Connection")
-	db := connectdb.MakeDBConnection(log, arangodbHost, arangodbCred)
-	log.Info("DB connection established")
+	// log.Info("Setting up DB Connection")
+	// db := connectdb.MakeDBConnection(log, arangodbHost, arangodbCred)
+	// log.Info("DB connection established")
 
-	log.Info("Checking collection")
-	tserver.EnsureCollectionExists(log, db)
-	log.Info("Collection checked")
+	// log.Info("Checking collection")
+	// tserver.EnsureCollectionExists(log, db)
+	// log.Info("Collection checked")
 
 	lis, err := net.Listen("tcp", ":"+port)
 	if err != nil {
@@ -64,45 +65,45 @@ func main() {
 
 	var opts []grpc.ServerOption
 
-	// //openssl req -new -newkey rsa:4096 -x509 -sha256 -days 30 -nodes -out server.crt -keyout server.key
-	// cert, err := tls.LoadX509KeyPair("/cert/tls.crt", "/cert/tls.key")
-	// if err != nil {
-	// 	log.Fatal("server: loadkeys:", zap.Error(err))
-	// }
+	//openssl req -new -newkey rsa:4096 -x509 -sha256 -days 30 -nodes -out server.crt -keyout server.key
+	cert, err := tls.LoadX509KeyPair("./cert/tls.crt", "./cert/tls.key")
+	if err != nil {
+		log.Fatal("server: loadkeys:", zap.Error(err))
+	}
 
-	// // Note if we don't tls.RequireAnyClientCert client side certs are ignored.
-	// config := &tls.Config{
-	// 	Certificates: []tls.Certificate{cert},
-	// 	// ClientCAs:    caCertPool,//It work! Peer client sertificates autenification
-	// 	// ClientAuth: tls.RequireAnyClientCert,
-	// 	// VerifyPeerCertificate: is called only after normal certificate verification https://pkg.go.dev/crypto/tls#Config
-	// 	// InsecureSkipVerify: false,
-	// 	InsecureSkipVerify: true,
-	// }
-	// cred := credentials.NewTLS(config)
+	// Note if we don't tls.RequireAnyClientCert client side certs are ignored.
+	config := &tls.Config{
+		Certificates: []tls.Certificate{cert},
+		// ClientCAs:    caCertPool,//It work! Peer client sertificates autenification
+		// ClientAuth: tls.RequireAnyClientCert,
+		// VerifyPeerCertificate: is called only after normal certificate verification https://pkg.go.dev/crypto/tls#Config
+		// InsecureSkipVerify: false,
+		InsecureSkipVerify: true,
+	}
+	cred := credentials.NewTLS(config)
+
+	opts = append(opts, grpc.Creds(cred))
 
 	var kaep = keepalive.EnforcementPolicy{
 		MinTime:             time.Duration(keepalive_ping) * time.Second, // If a client pings more than once every 5 seconds, terminate the connection
-		PermitWithoutStream: true,                                        // Allow pings even when there are no active streams           // send pings even without active streams
+		PermitWithoutStream: false,                                       // Allow pings even when there are no active streams           // send pings even without active streams
 	}
 
 	opts = append(opts, grpc.KeepaliveEnforcementPolicy(kaep))
 
-	var kasp = keepalive.ServerParameters{
-		MaxConnectionIdle:     0,                                              // 15 * time.Second, // If a client is idle for 15 seconds, send a GOAWAY
-		MaxConnectionAge:      0,                                              //30 * time.Second, // If any connection is alive for more than 30 seconds, send a GOAWAY
-		MaxConnectionAgeGrace: 0,                                              //15 * time.Second,  // Allow 5 seconds for pending RPCs to complete before forcibly closing connections
-		Time:                  time.Duration(keepalive_ping) * time.Second,    // send pings every keepalive_ping seconds if there is no activity
-		Timeout:               time.Duration(keepalive_timeout) * time.Second, // wait timeout second for ping back
-	}
+	// var kasp = keepalive.ServerParameters{
+	// 	MaxConnectionIdle:     0,                                              // 15 * time.Second, // If a client is idle for 15 seconds, send a GOAWAY
+	// 	MaxConnectionAge:      0,                                              //30 * time.Second, // If any connection is alive for more than 30 seconds, send a GOAWAY
+	// 	MaxConnectionAgeGrace: 0,                                              //15 * time.Second,  // Allow 5 seconds for pending RPCs to complete before forcibly closing connections
+	// 	Time:                  time.Duration(keepalive_ping) * time.Second,    // send pings every keepalive_ping seconds if there is no activity
+	// 	Timeout:               time.Duration(keepalive_timeout) * time.Second, // wait timeout second for ping back
+	// }
 
-	opts = append(opts, grpc.KeepaliveParams(kasp))
-
-	// opts = append(opts, grpc.Creds(cred))
+	// opts = append(opts, grpc.KeepaliveParams(kasp))
 
 	grpcServer := grpc.NewServer(opts...)
-	server := tserver.NewTunnelServer(log, db)
-	server.LoadHostFingerprintsFromDB()
+	server := tserver.NewTunnelServer(log, nil)
+	// server.LoadHostFingerprintsFromDB()
 	pb.RegisterSocketConnectionServer(grpcServer, server)
 
 	// srv := server.StartHttpServer()
@@ -111,7 +112,7 @@ func main() {
 	// dbsrv := server.StartDBgRPCServer()
 	// defer dbsrv.Stop()
 
-	log.Info("Hello2! gRPC-Server Listening on 0.0.0.0:", zap.String("port", port), zap.Skip())
+	log.Info("Hello! gRPC-Server Listening on 0.0.0.0:", zap.String("port", port), zap.Skip())
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatal("failed to serve grpc:", zap.Error(err))
 	}

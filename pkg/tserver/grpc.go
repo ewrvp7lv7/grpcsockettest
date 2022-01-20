@@ -34,21 +34,21 @@ type TunnelServer struct {
 
 //Initialize new struct for GRPC interface
 func NewTunnelServer(log *zap.Logger, db driver.Database) *TunnelServer {
-	col, _ := db.Collection(context.TODO(), HOSTS_COLLECTION)
-	est := true //todo &true not work
-	col.EnsureFullTextIndex(context.TODO(), []string{"host"}, &driver.EnsureFullTextIndexOptions{
-		MinLength:    2,
-		InBackground: true,
-		Name:         "textIndex",
-		Estimates:    &est,
-	})
+	/* 	col, _ := db.Collection(context.TODO(), HOSTS_COLLECTION)
+	   	est := true //todo &true not work
+	   	col.EnsureFullTextIndex(context.TODO(), []string{"host"}, &driver.EnsureFullTextIndexOptions{
+	   		MinLength:    2,
+	   		InBackground: true,
+	   		Name:         "textIndex",
+	   		Estimates:    &est,
+	   	}) */
 
 	return &TunnelServer{
 		fingerprints_hosts: make(map[string]string),
 		hosts:              make(map[string]tunnelHost),
 		request_id:         make(map[uint32]chan ([]byte)),
 
-		col: col,
+		// col: col,
 
 		log: log.Named("TunnelServer"),
 	}
@@ -84,7 +84,7 @@ func (s *TunnelServer) WaitForConnection(host string) error {
 	case <-r:
 		return nil
 	case <-time.After(30 * time.Second):
-		return errors.New("connection timeout exceeded")
+		return errors.New("Connection timeout exceeded")
 	}
 }
 
@@ -101,7 +101,8 @@ func (s *TunnelServer) InitConnection(stream pb.SocketConnection_InitConnectionS
 	// 	log.Error("Unregistered client Certificate", zap.String("Fingerprint", hex_sert_raw), zap.String("CommonName", cn))
 	// 	return errors.New("Unregistered Certificate" + cn)
 	// }
-	host := "test host"
+
+	host := "Hello everyone!"
 
 	log.Info("Client connected", zap.String("Host", host))
 
@@ -118,38 +119,44 @@ func (s *TunnelServer) InitConnection(stream pb.SocketConnection_InitConnectionS
 		s.mutex.Unlock()
 	}()
 
-	go func() {
-		// var errtmp error
-		for {
-			//receive json from location
-			in, err := stream.Recv()
-			if err != nil {
-				if err == io.EOF {
-					log.Error("Stream connection lost", zap.String("Host", host))
-				} else {
-					log.Error("stream.Recv", zap.String("Host", host), zap.Error(err))
-				}
-				// s.hosts[host].resetConn <- err //if client disconnected: panic: runtime error: invalid memory address or nil pointer dereference
-				// errtmp = err
-				break
+	// go func() {
+	// var errtmp error
+	for {
+		//receive json from location
+		in, err := stream.Recv()
+		if err != nil {
+			if err == io.EOF {
+				log.Error("Stream connection lost", zap.String("Host", host))
+			} else {
+				log.Error("stream.Recv", zap.String("Host", host), zap.Error(err))
 			}
-
-			log.Info("Received data from:", zap.String("In", in.Message))
-
-			// rid, ok := s.request_id[in.Id]
-			// if !ok {
-			// 	log.Error("Request does not exist", zap.String("Host", host))
-			// 	continue
-			// }
-			// rid <- in.Json
-
-			log.Info("Received data from:", zap.String("Host", host))
+			// s.hosts[host].resetConn <- err //if client disconnected: panic: runtime error: invalid memory address or nil pointer dereference
+			// errtmp = err
+			break
 		}
 
-		// s.hosts[host].resetConn <- errtmp
-	}()
+		log.Info("Received data from:", zap.String("in", in.Message))
 
-	err1 := <-s.hosts[host].resetConn
-	log.Info("Connection closed", zap.String("Host", host), zap.Error(err1))
-	return err1
+	}
+
+	// for {
+
+	// 	err := stream.Send(&pb.HttpReQuest2Loc{Id: 123, Message: "Hello from server!", Json: nil})
+	// 	if err != nil {
+	// 		log.Error("Failed stream.Send", zap.String("Host", host))
+	// 		break
+	// 	}
+
+	// 	log.Info("Message sended")
+
+	// 	<-time.After(10 * time.Second)
+
+	// }
+
+	// s.hosts[host].resetConn <- errtmp
+	// }()
+
+	// err1 := <-s.hosts[host].resetConn
+	log.Info("Connection closed", zap.String("Host", host))
+	return nil
 }
