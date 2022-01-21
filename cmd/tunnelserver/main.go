@@ -1,7 +1,6 @@
 package main
 
 import (
-	"crypto/tls"
 	"net"
 	"time"
 
@@ -11,7 +10,6 @@ import (
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/keepalive"
 )
 
@@ -65,34 +63,29 @@ func main() {
 
 	var opts []grpc.ServerOption
 
+	// //openssl req -new -newkey rsa:4096 -x509 -sha256 -days 30 -nodes -out server.crt -keyout server.key
+	// cert, err := tls.LoadX509KeyPair("./cert/tls.crt", "./cert/tls.key")
+	// // cert, err := tls.LoadX509KeyPair("/cert/tls.crt", "/cert/tls.key")
+	// if err != nil {
+	// 	log.Fatal("server: loadkeys:", zap.Error(err))
+	// }
 
+	// // Note if we don't tls.RequireAnyClientCert client side certs are ignored.
+	// config := &tls.Config{
+	// 	Certificates: []tls.Certificate{cert},
+	// 	// ClientCAs:    caCertPool,//It work! Peer client sertificates autenification
+	// 	// ClientAuth: tls.RequireAnyClientCert,
+	// 	// VerifyPeerCertificate: is called only after normal certificate verification https://pkg.go.dev/crypto/tls#Config
+	// 	// InsecureSkipVerify: false,
+	// 	InsecureSkipVerify: true,
+	// }
+	// cred := credentials.NewTLS(config)
 
-
-	//openssl req -new -newkey rsa:4096 -x509 -sha256 -days 30 -nodes -out server.crt -keyout server.key
-	cert, err := tls.LoadX509KeyPair("/cert/tls.crt", "/cert/tls.key")
-	if err != nil {
-		log.Fatal("server: loadkeys:", zap.Error(err))
-	}
-
-	// Note if we don't tls.RequireAnyClientCert client side certs are ignored.
-	config := &tls.Config{
-		Certificates: []tls.Certificate{cert},
-		// ClientCAs:    caCertPool,//It work! Peer client sertificates autenification
-		// ClientAuth: tls.RequireAnyClientCert,
-		// VerifyPeerCertificate: is called only after normal certificate verification https://pkg.go.dev/crypto/tls#Config
-		// InsecureSkipVerify: false,
-		InsecureSkipVerify: true,
-	}
-	cred := credentials.NewTLS(config)
-
-	opts = append(opts, grpc.Creds(cred))
-
-
-
+	// opts = append(opts, grpc.Creds(cred))
 
 	var kaep = keepalive.EnforcementPolicy{
 		MinTime:             time.Duration(keepalive_ping) * time.Second, // If a client pings more than once every 5 seconds, terminate the connection
-		PermitWithoutStream: false,                                       // Allow pings even when there are no active streams           // send pings even without active streams
+		PermitWithoutStream: true,                                       // Allow pings even when there are no active streams           // send pings even without active streams
 	}
 
 	opts = append(opts, grpc.KeepaliveEnforcementPolicy(kaep))

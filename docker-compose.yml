@@ -22,3 +22,5 @@ services:
   tunnelclient:
     #container_name: tunnelclient
     image: ghcr.io/ewrvp7lv7/grpcsockettest/client:latest
+    environment:
+      TUNNEL_HOST: tunnel.nocloud.slnt-opp.xyz:443
