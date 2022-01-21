@@ -3,7 +3,6 @@ package tserver
 import (
 	"context"
 	"errors"
-	"io"
 	"sync"
 	"time"
 
@@ -119,39 +118,39 @@ func (s *TunnelServer) InitConnection(stream pb.SocketConnection_InitConnectionS
 		s.mutex.Unlock()
 	}()
 
-	// go func() {
-	// var errtmp error
-	for {
-		//receive json from location
-		in, err := stream.Recv()
-		if err != nil {
-			if err == io.EOF {
-				log.Error("Stream connection lost", zap.String("Host", host))
-			} else {
-				log.Error("stream.Recv", zap.String("Host", host), zap.Error(err))
-			}
-			// s.hosts[host].resetConn <- err //if client disconnected: panic: runtime error: invalid memory address or nil pointer dereference
-			// errtmp = err
-			break
-		}
-
-		log.Info("Received data from:", zap.String("in", in.Message))
-
-	}
-
+	// // go func() {
+	// // var errtmp error
 	// for {
-
-	// 	err := stream.Send(&pb.HttpReQuest2Loc{Id: 123, Message: "Hello from server!", Json: nil})
+	// 	//receive json from location
+	// 	in, err := stream.Recv()
 	// 	if err != nil {
-	// 		log.Error("Failed stream.Send", zap.String("Host", host))
+	// 		if err == io.EOF {
+	// 			log.Error("Stream connection lost", zap.String("Host", host))
+	// 		} else {
+	// 			log.Error("stream.Recv", zap.String("Host", host), zap.Error(err))
+	// 		}
+	// 		// s.hosts[host].resetConn <- err //if client disconnected: panic: runtime error: invalid memory address or nil pointer dereference
+	// 		// errtmp = err
 	// 		break
 	// 	}
 
-	// 	log.Info("Message sended")
-
-	// 	<-time.After(10 * time.Second)
+	// 	log.Info("Received data from:", zap.String("in", in.Message))
 
 	// }
+
+	for {
+
+		err := stream.Send(&pb.HttpReQuest2Loc{Id: 123, Message: "Hello from server!", Json: nil})
+		if err != nil {
+			log.Error("Failed stream.Send", zap.String("Host", host))
+			break
+		}
+
+		log.Info("Message sended")
+
+		<-time.After(10 * time.Second)
+
+	}
 
 	// s.hosts[host].resetConn <- errtmp
 	// }()
