@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"crypto/tls"
 	"io"
 	"time"
 
@@ -10,6 +11,7 @@ import (
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/keepalive"
 )
@@ -29,8 +31,8 @@ func init() {
 
 	log = nocloud.NewLogger()
 
-	// viper.SetDefault("TUNNEL_HOST", "tunnel.nocloud.slnt-opp.xyz:443")
-	viper.SetDefault("TUNNEL_HOST", "localhost:8080")
+	viper.SetDefault("TUNNEL_HOST", "tunnel.nocloud.slnt-opp.xyz:443")
+	// viper.SetDefault("TUNNEL_HOST", "localhost:8080")
 	viper.SetDefault("DESTINATION_HOST", "ione")
 	viper.SetDefault("SECURE", true)
 	viper.SetDefault("KEEPALIVE_PINGS_EVERY", "10") //should be largest than EnforcementPolicy on server
@@ -47,30 +49,30 @@ func main() {
 	var opts []grpc.DialOption
 	opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
 
-	// if secure {
-	// 	// // Load client cert
-	// 	// cert, err := tls.LoadX509KeyPair("/cert/client.crt", "/cert/client.key")
-	// 	// if err != nil {
-	// 	// 	log.Fatal("fail to LoadX509KeyPair:", zap.Error(err))
-	// 	// }
+	if secure {
+		// // Load client cert
+		// cert, err := tls.LoadX509KeyPair("/cert/client.crt", "/cert/client.key")
+		// if err != nil {
+		// 	log.Fatal("fail to LoadX509KeyPair:", zap.Error(err))
+		// }
 
-	// 	// Setup HTTPS client
-	// 	config := &tls.Config{
-	// 		// Certificates: []tls.Certificate{cert},
-	// 		// InsecureSkipVerify: false,
-	// 		InsecureSkipVerify: true,
-	// 	}
-	// 	cred := credentials.NewTLS(config)
+		// Setup HTTPS client
+		config := &tls.Config{
+			// Certificates: []tls.Certificate{cert},
+			// InsecureSkipVerify: false,
+			InsecureSkipVerify: true,
+		}
+		cred := credentials.NewTLS(config)
 
-	// 	// cred := credentials.NewTLS(&tls.Config{InsecureSkipVerify: true})
-	// 	opts[0] = grpc.WithTransportCredentials(cred)
-	// }
+		// cred := credentials.NewTLS(&tls.Config{InsecureSkipVerify: true})
+		opts[0] = grpc.WithTransportCredentials(cred)
+	}
 
 	//keepalive_ping client should be more
 	var kacp = keepalive.ClientParameters{
 		Time:                time.Duration(keepalive_ping) * time.Second,    // send pings every keepalive_ping seconds if there is no activity
 		Timeout:             time.Duration(keepalive_timeout) * time.Second, // wait timeout second for ping back
-		PermitWithoutStream: true,                                          // send pings even without active streams
+		PermitWithoutStream: false,                                           // send pings even without active streams
 	}
 
 	opts = append(opts, grpc.WithKeepaliveParams(kacp))
@@ -78,7 +80,7 @@ func main() {
 	opts = append(opts, grpc.WithBlock())
 
 	//Reconnection
-	for {
+	// for {
 
 		func() {
 			defer time.Sleep(5 * time.Second)
@@ -128,5 +130,5 @@ func main() {
 			}
 		}()
 
-	}
+	// }
 }
