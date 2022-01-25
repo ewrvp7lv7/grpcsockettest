@@ -31,8 +31,10 @@ func init() {
 
 	log = nocloud.NewLogger()
 
-	viper.SetDefault("TUNNEL_HOST", "tunnel.nocloud.slnt-opp.xyz:443")
+	// viper.SetDefault("TUNNEL_HOST", "tunnel.nocloud.slnt-opp.xyz:443")
 	// viper.SetDefault("TUNNEL_HOST", "localhost:8080")
+	viper.SetDefault("TUNNEL_HOST", "localhost:53001")
+
 	viper.SetDefault("DESTINATION_HOST", "ione")
 	viper.SetDefault("SECURE", true)
 	viper.SetDefault("KEEPALIVE_PINGS_EVERY", "10") //should be largest than EnforcementPolicy on server
@@ -82,53 +84,53 @@ func main() {
 	//Reconnection
 	// for {
 
-		func() {
-			defer time.Sleep(5 * time.Second)
+	func() {
+		defer time.Sleep(5 * time.Second)
 
-			log.Info("Try to connect...", zap.String("host", host), zap.Skip())
+		log.Info("Try to connect...", zap.String("host", host), zap.Skip())
 
-			ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
-			defer cancel()
+		ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+		defer cancel()
 
-			conn, err := grpc.DialContext(ctx, host, opts...)
+		conn, err := grpc.DialContext(ctx, host, opts...)
 
+		if err != nil {
+			log.Error("fail to dial:", zap.Error(err))
+			// panic(1)
+			return
+		}
+		defer conn.Close()
+
+		client := pb.NewSocketConnectionClient(conn)
+
+		stream, err := client.InitConnection(context.Background())
+		if err != nil {
+			log.Error("Failed InitTunnel", zap.Error(err))
+			return
+		}
+
+		log.Info("Connected to server:", zap.String("host", host), zap.Skip())
+
+		for {
+			in, err := stream.Recv()
+			if err == io.EOF {
+				log.Info("Connection closed", zap.Error(err))
+				break
+			}
 			if err != nil {
-				log.Error("fail to dial:", zap.Error(err))
-				// panic(1)
-				return
-			}
-			defer conn.Close()
-
-			client := pb.NewSocketConnectionClient(conn)
-
-			stream, err := client.InitConnection(context.Background())
-			if err != nil {
-				log.Error("Failed InitTunnel", zap.Error(err))
-				return
+				log.Error("Failed to receive a note:", zap.Error(err))
+				break
 			}
 
-			log.Info("Connected to server:", zap.String("host", host), zap.Skip())
+			// log.Debug("Received request from server:", zap.String("Message", in.Message), zap.Skip())
 
-			for {
-				in, err := stream.Recv()
-				if err == io.EOF {
-					log.Info("Connection closed", zap.Error(err))
-					break
-				}
-				if err != nil {
-					log.Error("Failed to receive a note:", zap.Error(err))
-					break
-				}
+			log.Info("Received request from server:", zap.String("Message", in.Message), zap.Skip())
 
-				// log.Debug("Received request from server:", zap.String("Message", in.Message), zap.Skip())
+			// //TODO send errors from httpClient
+			// go tclient.HttpClient(log, dest, stream, in.Message, in.Id, in.Json)
 
-				log.Info("Received request from server:", zap.String("Message", in.Message), zap.Skip())
-
-				// //TODO send errors from httpClient
-				// go tclient.HttpClient(log, dest, stream, in.Message, in.Id, in.Json)
-
-			}
-		}()
+		}
+	}()
 
 	// }
 }

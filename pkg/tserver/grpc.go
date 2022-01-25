@@ -118,8 +118,6 @@ func (s *TunnelServer) InitConnection(stream pb.SocketConnection_InitConnectionS
 		s.mutex.Unlock()
 	}()
 
-	// // go func() {
-	// // var errtmp error
 	// for {
 	// 	//receive json from location
 	// 	in, err := stream.Recv()
@@ -151,9 +149,6 @@ func (s *TunnelServer) InitConnection(stream pb.SocketConnection_InitConnectionS
 		<-time.After(10 * time.Second)
 
 	}
-
-	// s.hosts[host].resetConn <- errtmp
-	// }()
 
 	// err1 := <-s.hosts[host].resetConn
 	log.Info("Connection closed", zap.String("Host", host))

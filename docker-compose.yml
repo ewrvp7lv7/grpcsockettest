@@ -24,3 +24,21 @@ services:
     image: ghcr.io/ewrvp7lv7/grpcsockettest/client:latest
     environment:
       TUNNEL_HOST: tunnel.nocloud.slnt-opp.xyz:443
+
+
+  # # toxiproxy.json ->toxics not work!
+  # # https://github.com/shopify/toxiproxy
+  # toxiproxy:
+  #   container_name: toxiproxy
+  #   image: ghcr.io/shopify/toxiproxy:latest
+  #   command: -host=0.0.0.0 -config /config/toxiproxy.json
+  #   restart: always
+  #   hostname: localhost
+  #   network_mode: "host"
+  #   expose:
+  #     - 8474
+  #     - 53000
+  #     - 53001
+  #     - 53002
+  #   volumes:
+  #     - ./config:/config

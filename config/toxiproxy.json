@@ -1,0 +1,73 @@
+[
+    {
+        "name": "tunnel",
+        "listen": "127.0.0.1:53000",
+        "upstream": "tunnel.nocloud.slnt-opp.xyz:443",
+        "enabled": true,
+        "toxics": [
+            {
+                "name": "latency",
+                "type": "latency",
+                "stream": "downstream",
+                "toxicity": 1.0,
+                "attributes": {
+                    "latency": 5000,
+                    "jitter": 2000
+                }
+            },
+            {
+                "name": "abort",
+                "type": "limit_data",
+                "stream": "downstream",
+                "toxicity": 0.75,
+                "attributes": {
+                    "bytes": 100
+                }
+            },
+            {
+                "name": "timeout",
+                "type": "timeout",
+                "stream": "downstream",
+                "toxicity": 0.5,
+                "attributes": {
+                    "timeout": 100
+                }
+            }
+        ]
+    },
+    {
+        "name": "localserv",
+        "listen": "127.0.0.1:53001",
+        "upstream": "127.0.0.1:8080",
+        "enabled": true,
+        "toxics": [
+            {
+                "attributes": {
+                    "timeout": 0
+                },
+                "name": "serviceTimeout",
+                "type": "timeout",
+                "stream": "upstream",
+                "toxicity": 1
+            }
+        ]
+    },
+    {
+        "name": "dev-mongodb",
+        "listen": "127.0.0.1:53002",
+        "upstream": "127.0.0.1:30002",
+        "enabled": false,
+        "toxics": [
+            {
+                "name": "latency",
+                "type": "latency",
+                "stream": "downstream",
+                "toxicity": 1.0,
+                "attributes": {
+                    "latency": 500,
+                    "jitter": 2000
+                }
+            }
+        ]
+    }
+]
